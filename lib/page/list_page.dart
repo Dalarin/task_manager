@@ -7,6 +7,7 @@ class ListPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // TODO: Страница списка
     return Container();
   }
 }

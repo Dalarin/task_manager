@@ -7,6 +7,8 @@ import 'package:equatable/equatable.dart';
 import 'package:task_manager/models/task.dart';
 import 'package:task_manager/repository/task_repository.dart';
 
+import '../../models/tag.dart';
+
 part 'task_state.dart';
 
 part 'task_event.dart';
@@ -33,28 +35,43 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     }
   }
 
-  _createTask(event, emit) async {
+  _createTask(CreateTask event, emit) async {
     try {
-      emit(TaskLoading());
-      Task? task = await _taskRepository.createTask(event.task);
-      if (task != null) {
-        event.tasks.add(task);
-        emit(TaskListLoaded(event.tasks));
+      if (event.title.isEmpty || event.description.isEmpty) {
+        emit(const TaskError('Ошибка'));
       } else {
-        emit('Ошибка при создании задания');
+        emit(TaskLoading());
+        Task? task = await _taskRepository.createTask(Task(
+          userID: event.userId,
+          title: event.title,
+          description: event.description,
+          creationDate: event.creationDate,
+          completeDate: event.completeDate,
+          isCompleted: false,
+          tags: event.tags,
+        ));
+        if (task != null) {
+          event.tasks.add(task);
+          emit(TaskListLoaded(event.tasks));
+        } else {
+          emit(const TaskError('Ошибка при создании задания'));
+        }
       }
     } on Exception catch (exception, _) {
       _catchHandler(event, emit, exception);
     }
   }
 
-  _selectTasksOfDay(event, emit) async {
+  _selectTasksOfDay(DayOfTasksSelected event, emit) async {
     try {
       emit(TaskLoading());
-      List<Task> selectedDayTask = event.tasks
-          .where((element) => element.completeDate.isAfter(event.selectedDay))
-          .toList();
-      emit(TaskListLoaded(selectedDayTask));
+      List<Task>? tasks = await _taskRepository.fetchTasksByDate(
+          event.selectedDay, event.userId);
+      if (tasks != null) {
+        emit(TaskListLoaded(tasks));
+      } else {
+        emit(const TaskError('Ошибка при получении информации'));
+      }
     } on Exception catch (exception, _) {
       _catchHandler(event, emit, exception);
     }

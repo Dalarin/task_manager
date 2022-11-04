@@ -18,6 +18,7 @@ dependencies:
   http: ^0.13.5
   equatable: ^2.0.5
   intl: ^0.17.0
+  shared_preferences: ^2.0.15
   calendar_timeline: ^1.0.5
   flutter_localizations:
     sdk: flutter

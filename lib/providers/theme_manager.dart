@@ -18,6 +18,14 @@ class ThemeManager {
           secondary: const Color(0xFF3B378E),
           primary: const Color(0xFF3B378E),
         ),
+    dialogTheme: DialogTheme(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+    ),
+    checkboxTheme: const CheckboxThemeData(
+      fillColor: MaterialStatePropertyAll<Color>(Color(0xFF3B378E)),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       fillColor: const Color(0xFF3B378E).withOpacity(0.1),
       filled: true,

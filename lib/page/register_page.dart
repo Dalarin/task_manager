@@ -173,9 +173,9 @@ class _RegisterInputFormState extends State<RegisterInputForm> {
         height: height * 0.08,
         width: width,
         alignment: Alignment.center,
-        decoration: const BoxDecoration(
-          color: Color(0xFF3B378E),
-          borderRadius: BorderRadius.all(
+        decoration:  BoxDecoration(
+          color: Theme.of(context).primaryColor,
+          borderRadius: const BorderRadius.all(
             Radius.circular(20),
           ),
         ),

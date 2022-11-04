@@ -5,18 +5,20 @@ class LoadingElement extends StatelessWidget {
   final double height;
   final double width;
   final Axis scrollDirection;
+  final double boxSize;
 
-  const LoadingElement({
-    Key? key,
-    required this.height,
-    required this.width,
-    required this.scrollDirection,
-  }) : super(key: key);
+  const LoadingElement(
+      {Key? key,
+      required this.height,
+      required this.width,
+      required this.scrollDirection,
+      required this.boxSize})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: MediaQuery.of(context).size.height * 0.25,
+      height: boxSize,
       child: ListView.separated(
         shrinkWrap: true,
         scrollDirection: scrollDirection,

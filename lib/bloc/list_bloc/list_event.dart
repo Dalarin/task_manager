@@ -9,7 +9,7 @@ abstract class ListEvent extends Equatable {
 
 class UpdateList extends ListEvent {
   final int listId;
-  final model.List list;
+  final model.ListModel list;
 
   const UpdateList(this.listId, this.list);
 }
@@ -18,7 +18,7 @@ class CreateList extends ListEvent {
   final int userId;
   final String title;
   final DateTime creationDate;
-  final List<model.List> list;
+  final List<model.ListModel> list;
 
   const CreateList(this.userId, this.title, this.creationDate, this.list);
 }

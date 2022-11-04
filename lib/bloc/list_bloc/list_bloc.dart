@@ -26,21 +26,31 @@ class ListBloc extends Bloc<ListEvent, ListState> {
         'Ошибка. Проверьте интернет соединение и попробуйте снова',
       ));
     } else {
-      emit(const ListError('Ошибка авторизации'));
+      emit(const ListError('Ошибка загрузки информации'));
     }
   }
 
   _deleteList(event, emit) async {}
 
-  _updateList(event, emit) async {}
+  _updateList(UpdateList event, emit) async {
+    try {
+      model.ListModel? list = await _repository.updateList(event.list);
+      if (list != null) {
+        print('update');
+      }
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
+    }
+  }
 
-  _createList(event, emit) async {
+  _createList(CreateList event, emit) async {
     try {
       emit(ListLoading());
-      model.List? isCreated = await _repository.createList(model.List(
+      model.ListModel? isCreated = await _repository.createList(model.ListModel(
         userId: event.userId,
         title: event.title,
         completeBy: event.creationDate,
+        tasks: [],
       ));
       if (isCreated != null) {
         event.list.add(isCreated);
@@ -48,7 +58,7 @@ class ListBloc extends Bloc<ListEvent, ListState> {
       } else {
         emit(const ListError('Ошибка создания списка'));
       }
-    } on Exception catch (_, exception) {
+    } on Exception catch (_) {
       _catchHandler(event, emit, _);
     }
   }
@@ -62,7 +72,7 @@ class ListBloc extends Bloc<ListEvent, ListState> {
       } else {
         emit(const ListError('Ошибка при загрузке информации'));
       }
-    } on Exception catch (_, exception) {
+    } on Exception catch (_) {
       _catchHandler(event, emit, _);
     }
   }

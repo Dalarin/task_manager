@@ -1,7 +1,8 @@
-import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:task_manager/providers/storage_manager.dart';
+import 'package:task_manager/providers/constants.dart' as constant;
 
 import '../../models/user.dart';
 import '../../repository/user_repository.dart';
@@ -15,17 +16,30 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
 
   AuthBloc(this._userRepository) : super(AuthInitial()) {
     on<LoginEvent>((event, emit) => _authEvent(event, emit));
+    on<AppStarted>((event, emit) => _appStarted(event, emit));
   }
 
-
   void _catchHandler(event, emit, Exception exception) {
-    if (exception is SocketException) {
-      emit(const AuthError(
-        'Ошибка. Проверьте интернет соединение и попробуйте снова',
-      ));
-    } else {
-      emit(const AuthError('Ошибка авторизации'));
+    emit(AuthError(exception.toString()));
+  }
 
+  _appStarted(AppStarted event, Emitter emit) async {
+    try {
+      emit(AppStarting());
+      User? user = await StorageManager.readUser();
+      if (user != null) {
+        User? confirmedUser = await _userRepository.confirmLogin(user);
+        if (confirmedUser != null) {
+          constant.user = confirmedUser;
+          emit(AuthLoaded(confirmedUser));
+        } else {
+          emit(AuthInitial());
+        }
+      } else {
+        emit(AuthInitial());
+      }
+    } on Exception catch (_) {
+      _catchHandler(event, emit, _);
     }
   }
 
@@ -37,11 +51,14 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
       } else {
         emit(AuthLoading());
         final user = await _userRepository.auth(event.email, event.password);
-        emit(user != null
-            ? AuthLoaded(user)
-            : const AuthError('Ошибка. Пользователь не найден'));
+        if (user != null) {
+          StorageManager.saveUser(user);
+          emit(AuthLoaded(user));
+        } else {
+          emit(const AuthError('Ошибка. Пользователь не найден'));
+        }
       }
-    } on Exception catch (_, exception) {
+    } on Exception catch (_) {
       _catchHandler(event, emit, _);
     }
   }

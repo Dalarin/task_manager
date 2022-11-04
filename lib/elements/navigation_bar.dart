@@ -2,10 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:task_manager/page/calendar_page.dart';
 import 'package:task_manager/page/home_page.dart';
 import 'package:task_manager/page/notifications_page.dart';
-import 'package:task_manager/page/register_page.dart';
 import 'package:task_manager/page/settings_page.dart';
+import 'package:task_manager/providers/constants.dart';
 
-import '../page/auth_page.dart';
 
 class NavigationBar extends StatefulWidget {
   const NavigationBar({Key? key}) : super(key: key);
@@ -32,6 +31,8 @@ class _NavigationBarState extends State<NavigationBar> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      appBar: _appBar(context),
+      extendBody: true,
       body: child[currentIndex],
       bottomNavigationBar: Container(
         decoration: const BoxDecoration(
@@ -77,6 +78,20 @@ class _NavigationBarState extends State<NavigationBar> {
           ),
         ),
       ),
+    );
+  }
+
+  AppBar _appBar(BuildContext context) {
+    List<String> partsOfFio = user!.fio.split(' ');
+    return AppBar(
+      backgroundColor: Colors.transparent,
+      elevation: 0.0,
+      actions: [
+        CircleAvatar(
+          backgroundColor: Theme.of(context).primaryColor,
+          child: Text(partsOfFio[1][0] + partsOfFio[0][0]),
+        )
+      ],
     );
   }
 }

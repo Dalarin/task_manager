@@ -1,4 +1,6 @@
 import '../models/user.dart';
 
-const apiURI = 'https://cb7f-46-61-4-204.eu.ngrok.io/api';
+
+const apiURI = 'https://11e0-87-117-61-50.eu.ngrok.io/api';
+// TODO: заменить на provider
 User? user;

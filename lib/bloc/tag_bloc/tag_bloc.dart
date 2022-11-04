@@ -14,75 +14,93 @@ class TagBloc extends Bloc<TagEvent, TagState> {
   final TagRepository tagRepository;
 
   TagBloc(this.tagRepository) : super(TagInitial()) {
-    on<TagEvent>((event, emit) {
-      try {
-        if (event is GetTagsListOfUser) {
-          _getTagsOfUser(event, emit);
-        } else if (event is GetTagsListOfTask) {
-          _getTagsOfTask(event, emit);
-        } else if (event is UpdateTag) {
-          _updateTag(event, emit);
-        } else if (event is DeleteTag) {
-          _deleteTag(event, emit);
-        } else if (event is CreateTag) {
-          _createTag(event, emit);
-        }
-      } on SocketException {
+    on<GetTagsListOfTask>((event, emit) => _getTagsOfTask(event, emit));
+    on<GetTagsListOfUser>((event, emit) => _getTagsOfUser(event, emit));
+    on<UpdateTag>((event, emit) => _updateTag(event, emit));
+    on<DeleteTag>((event, emit) => _deleteTag(event, emit));
+    on<CreateTag>((event, emit) => _createTag(event, emit));
+  }
+
+  void _catchHandler(event, emit, Exception exception) {
+    if (exception is SocketException) {
+      emit(const TagError(
+        'Ошибка. Проверьте интернет соединение и попробуйте снова',
+      ));
+    } else {
+      emit(const TagError('Ошибка загрузки информации'));
+    }
+  }
+
+  _createTag(event, emit) async {
+    try {
+      Tag? created = await tagRepository.createTag(event.tag);
+      if (created == null) {
         emit(const TagError(
           'Ошибка. Проверьте интернет соединение и попробуйте снова',
         ));
-      } on Exception {
-        emit(const TagError('Ошибка'));
+      } else {
+        event.tags.add(created);
+        emit(TagListLoaded(event.tags));
       }
-    });
-  }
-
-  Stream<void> _createTag(event, emit) async* {
-    Tag? created = await tagRepository.createTag(event.tag);
-    if (created == null) {
-      emit(const TagError(
-        'Ошибка. Проверьте интернет соединение и попробуйте снова',
-      ));
-    } else {
-      event.tags.add(created);
-      emit(TagListLoaded(event.tags));
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
     }
   }
 
-  Stream<void> _deleteTag(event, emit) async* {
-    bool deleted = await tagRepository.deleteTag(event.tagId);
-    if (!deleted) {
-      emit(const TagError(
-        'Ошибка. Проверьте интернет соединение и попробуйте снова',
-      ));
-    } else {
-      event.tags.removeWhere((element) => element.id == event.tagId);
-      emit(TagListLoaded(event.tags));
+  _deleteTag(event, emit) async {
+    try {
+      bool deleted = await tagRepository.deleteTag(event.tagId);
+      if (!deleted) {
+        emit(const TagError(
+          'Ошибка. Проверьте интернет соединение и попробуйте снова',
+        ));
+      } else {
+        event.tags.removeWhere((element) => element.id == event.tagId);
+        emit(TagListLoaded(event.tags));
+      }
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
     }
   }
 
-  Stream<void> _updateTag(UpdateTag event, emit) async* {
-    Tag? updated = await tagRepository.updateTag(event.tagId, event.tag);
-    if (updated == null) {
-      emit(const TagError(
-        'Ошибка. Проверьте интернет соединение и попробуйте снова',
-      ));
-    } else {
-      event.tags.removeWhere((element) => element.id == event.tagId);
-      event.tags.add(updated);
-      emit(TagListLoaded(event.tags));
+  _updateTag(UpdateTag event, emit) async {
+    try {
+      Tag? updated = await tagRepository.updateTag(event.tagId, event.tag);
+      if (updated == null) {
+        emit(const TagError(
+          'Ошибка. Проверьте интернет соединение и попробуйте снова',
+        ));
+      } else {
+        event.tags.removeWhere((element) => element.id == event.tagId);
+        event.tags.add(updated);
+        emit(TagListLoaded(event.tags));
+      }
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
     }
   }
 
-  Stream<void> _getTagsOfTask(event, emit) async* {
-    emit(TagLoading());
-    final tagList = await tagRepository.fetchTagsByTaskId(event.taskId);
-    emit(tagList == null? const TagError('Ошибка загрузки') : TagListLoaded(tagList));
+  _getTagsOfTask(event, emit) async {
+    try {
+      emit(TagLoading());
+      final tagList = await tagRepository.fetchTagsByTaskId(event.taskId);
+      emit(tagList == null
+          ? const TagError('Ошибка загрузки')
+          : TagListLoaded(tagList));
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
+    }
   }
 
-  Stream<void> _getTagsOfUser(event, emit) async* {
-    emit(TagLoading());
-    final tagList = await tagRepository.fetchTagsByUserId(event.userId);
-    emit(tagList == null? const TagError('Ошибка загрузки') : TagListLoaded(tagList));
+  _getTagsOfUser(event, emit) async {
+    try {
+      emit(TagLoading());
+      final tagList = await tagRepository.fetchTagsByUserId(event.userId);
+      emit(tagList == null
+          ? const TagError('Ошибка загрузки')
+          : TagListLoaded(tagList));
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
+    }
   }
 }

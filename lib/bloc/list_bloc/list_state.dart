@@ -12,7 +12,7 @@ class ListInitial extends ListState {}
 class ListLoading extends ListState {}
 
 class ListLoaded extends ListState {
-  final List<model.List> list;
+  final List<model.ListModel> list;
 
   const ListLoaded(this.list);
 }

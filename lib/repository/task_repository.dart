@@ -14,6 +14,8 @@ class TaskRepository {
 
   Future<Task?> createTask(Task task) => _provider.createTask(task);
 
+  Future<List<Task>?> fetchTasksByDate(DateTime dateTime, int userId) => _provider.fetchTasksByDate(dateTime, userId);
+
   Future<Task?> updateTask(int taskId, Task task) =>
       _provider.updateTask(taskId, task);
 }

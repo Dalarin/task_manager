@@ -20,30 +20,30 @@ class ListOfLists extends StatelessWidget {
           ListBloc(ListRepository())..add(LoadLists(user!.id!)),
       child: BlocListener<ListBloc, ListState>(
         child: BlocBuilder<ListBloc, ListState>(
-          builder: (cntx, state) {
+          builder: (ctx, state) {
             if (state is ListLoading) {
               return LoadingElement(
                 height: height * 0.25,
                 width: width * 0.45,
                 scrollDirection: Axis.horizontal,
+                boxSize: height * 0.4,
               );
             } else if (state is ListError) {
               return Text(state.message);
             } else if (state is ListLoaded) {
-              return _listListView(cntx, state.list);
+              return _listListView(ctx, state.list);
             } else {
-              return _listListView(cntx, []);
+              return _listListView(ctx, []);
             }
           },
         ),
         listener: (context, state) {
-          print(state.toString());
         },
       ),
     );
   }
 
-  Widget _listListView(BuildContext context, List<model.List> list) {
+  Widget _listListView(BuildContext context, List<model.ListModel> list) {
     return SizedBox(
       height: MediaQuery.of(context).size.height * 0.25,
       child: SingleChildScrollView(

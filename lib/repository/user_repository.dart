@@ -10,6 +10,8 @@ class UserRepository {
   Future<User?> auth(String email, String password) =>
       _provider.auth(email, password);
 
+  Future<User?> confirmLogin(User user) => _provider.confirmLogin(user);
+
   Future<User?> createUser(User user) => _provider.createUser(user);
 
   Future<User?> updateUser(User user) => _provider.updateUser(user);

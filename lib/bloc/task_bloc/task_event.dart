@@ -16,17 +16,23 @@ class UpdateTask extends TaskEvent {
 }
 
 class CreateTask extends TaskEvent {
-  final Task task;
   final List<Task> tasks;
+  final int userId;
+  final String title;
+  final String description;
+  final DateTime creationDate;
+  final DateTime completeDate;
+  final List<Tag> tags;
 
-  const CreateTask(this.task, this.tasks);
+
+  const CreateTask(this.userId, this.title, this.description, this.creationDate, this.completeDate, this.tags, this.tasks);
 }
 
 class DayOfTasksSelected extends TaskEvent {
-  final List<Task> tasks;
   final DateTime selectedDay;
+  final int userId;
 
-  const DayOfTasksSelected(this.tasks, this.selectedDay);
+  const DayOfTasksSelected(this.selectedDay, this.userId);
 }
 
 class DeleteTask extends TaskEvent {

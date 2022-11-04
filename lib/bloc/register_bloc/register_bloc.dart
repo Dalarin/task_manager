@@ -1,8 +1,8 @@
-import 'dart:async';
 import 'dart:io';
-
+import 'package:task_manager/providers/constants.dart' as constant;
 import 'package:bloc/bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:task_manager/providers/storage_manager.dart';
 
 import '../../models/user.dart';
 import '../../repository/user_repository.dart';
@@ -29,6 +29,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
         ));
         emit(RegisterInitial());
       } else {
+        // TODO: добавить валидаторы email и телефона
         emit(RegisterLoading());
         final user = await _userRepository.createUser(User(
           password: event.password,
@@ -36,9 +37,13 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
           email: event.email,
           fio: event.fio,
         ));
-        emit(user != null
-            ? RegisterLoaded(user)
-            : const RegisterError('Ошибка регистрации'));
+        if (user != null) {
+          constant.user = user;
+          StorageManager.saveUser(user);
+          emit(RegisterLoaded(user));
+        } else {
+          emit(const RegisterError('Ошибка регистрации'));
+        }
       }
     } on SocketException {
       emit(const RegisterError(

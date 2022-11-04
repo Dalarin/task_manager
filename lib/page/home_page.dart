@@ -13,22 +13,8 @@ class HomePage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: _appBar(context),
+      extendBody: true,
       body: HomePageContent(context: context),
-    );
-  }
-
-  AppBar _appBar(BuildContext context) {
-    List<String> partsOfFio = user!.fio.split(' ');
-    return AppBar(
-      backgroundColor: Colors.transparent,
-      elevation: 0.0,
-      actions: [
-        CircleAvatar(
-          backgroundColor: Theme.of(context).primaryColor,
-          child: Text(partsOfFio[1][0] + partsOfFio[0][0]),
-        )
-      ],
     );
   }
 }
@@ -45,18 +31,26 @@ class HomePageContent extends StatelessWidget {
 
   Widget _body(BuildContext context) {
     return SafeArea(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 15, vertical: 15),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          children: [
-            _helloWidget(),
-            _listHeader(text: 'Ваши списки'),
-            const ListOfLists(),
-            _listHeader(text: 'Список задач'),
-            const ListOfTasks(),
-          ],
+      child: SingleChildScrollView(
+        child: Padding(
+          padding: const EdgeInsets.only(top: 15, left: 15, right: 15),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              _helloWidget(),
+              const SizedBox(height: 15),
+              _listHeader(text: 'Ваши списки'),
+              const SizedBox(height: 15),
+              const ListOfLists(),
+              const SizedBox(height: 15),
+              _listHeader(text: 'Список задач'),
+              const SizedBox(height: 15),
+              ListOfTasks(
+                finalHeight: 0.4,
+                boxSize: MediaQuery.of(context).size.height * 0.4,
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -165,10 +159,12 @@ class _CreateListBottomMenuState extends State<CreateListBottomMenu> {
   Widget _createButton(BuildContext context) {
     return InkWell(
       onTap: () {
-        BlocProvider.of<ListBloc>(context).add(
-          CreateList(user!.id!, titleController.text, DateTime.now(),
-              widget.list as List<model.List>),
-        );
+        BlocProvider.of<ListBloc>(context).add(CreateList(
+          user!.id!,
+          titleController.text,
+          DateTime.now(),
+          widget.list as List<model.ListModel>,
+        ));
         Navigator.of(context).pop();
       },
       child: Container(

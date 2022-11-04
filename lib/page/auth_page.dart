@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/bloc/auth_bloc/auth_bloc.dart';
@@ -15,11 +14,13 @@ class AuthPage extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc(UserRepository()),
+          create: (context) => AuthBloc(UserRepository())..add(AppStarted()),
           child: BlocListener<AuthBloc, AuthState>(
             child: BlocBuilder<AuthBloc, AuthState>(
               builder: (context, state) {
                 if (state is AuthLoading) {
+                  return const Center(child: CircularProgressIndicator());
+                } else if (state is AppStarting) {
                   return const Center(child: CircularProgressIndicator());
                 } else {
                   return LoginInputForm(context: context);

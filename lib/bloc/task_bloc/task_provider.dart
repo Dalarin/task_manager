@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'dart:developer';
 
 import 'package:http/http.dart';
 
@@ -8,7 +7,9 @@ import '../../providers/constants.dart';
 
 class TaskProvider {
   Future<List<Task>?> fetchTasksByUserId(int userId) async {
-    Response response = await get(Uri.parse('$apiURI/tasks/?userId=$userId'));
+    Response response = await get(
+      Uri.parse('$apiURI/tasks/user?userId=$userId'),
+    );
     if (response.statusCode == 200) {
       var list = json.decode(response.body) as List;
       List<Task> tasks = list.map((task) => Task.fromJson(task)).toList();
@@ -18,7 +19,8 @@ class TaskProvider {
   }
 
   Future<List<Task>?> fetchTasksByListId(int listId) async {
-    Response response = await get(Uri.parse('$apiURI/tasks/?listId=$listId'));
+    Response response =
+        await get(Uri.parse('$apiURI/tasks/list?listId=$listId'));
     if (response.statusCode == 200) {
       var list = json.decode(response.body) as List;
       List<Task> tasks = list.map((task) => Task.fromJson(task)).toList();
@@ -35,7 +37,8 @@ class TaskProvider {
   Future<Task?> createTask(Task task) async {
     Response response = await post(
       Uri.parse('$apiURI/tasks/'),
-      body: task.toJson(),
+      body: jsonEncode(task.toJson()),
+      headers: {'Content-Type': 'application/json'},
     );
     return response.statusCode == 201
         ? Task.fromJson(jsonDecode(response.body))
@@ -44,11 +47,24 @@ class TaskProvider {
 
   Future<Task?> updateTask(int taskId, Task task) async {
     Response response = await put(
-      Uri.parse('$apiURI/tasks/?id=$taskId'),
-      body: task.toJson(),
+      Uri.parse('$apiURI/tasks?id=$taskId'),
+      body: jsonEncode(task.toJson()),
+      headers: {'Content-Type': 'application/json'},
     );
     return response.statusCode == 200
         ? Task.fromJson(jsonDecode(response.body))
         : null;
+  }
+
+  Future<List<Task>?> fetchTasksByDate(DateTime dateTime, int userId) async {
+    Response response = await get(
+      Uri.parse('$apiURI/tasks/date?date=$dateTime&userId=$userId'),
+    );
+    if (response.statusCode == 200) {
+      var list = json.decode(response.body) as List;
+      List<Task> tasks = list.map((task) => Task.fromJson(task)).toList();
+      return tasks;
+    }
+    return null;
   }
 }
