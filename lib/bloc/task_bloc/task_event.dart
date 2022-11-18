@@ -15,6 +15,7 @@ class UpdateTask extends TaskEvent {
   const UpdateTask(this.taskId, this.task, this.tasks);
 }
 
+
 class CreateTask extends TaskEvent {
   final List<Task> tasks;
   final int userId;
@@ -23,9 +24,10 @@ class CreateTask extends TaskEvent {
   final DateTime creationDate;
   final DateTime completeDate;
   final List<Tag> tags;
+  final List<SubTask> subtasks;
 
 
-  const CreateTask(this.userId, this.title, this.description, this.creationDate, this.completeDate, this.tags, this.tasks);
+  const CreateTask(this.userId, this.title, this.description, this.creationDate, this.completeDate, this.tags, this.tasks, this.subtasks);
 }
 
 class DayOfTasksSelected extends TaskEvent {

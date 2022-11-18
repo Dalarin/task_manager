@@ -7,6 +7,7 @@ import 'package:equatable/equatable.dart';
 import 'package:task_manager/models/task.dart';
 import 'package:task_manager/repository/task_repository.dart';
 
+import '../../models/subtask.dart';
 import '../../models/tag.dart';
 
 part 'task_state.dart';
@@ -77,8 +78,9 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     }
   }
 
-  _deleteTask(event, emit) async {
+  _deleteTask(DeleteTask event, emit) async {
     try {
+      emit(TaskLoading());
       bool deleted = await _taskRepository.deleteTask(event.taskId);
       if (!deleted) {
         emit(const TaskError('Ошибка при удалении задания'));
@@ -91,8 +93,12 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
     }
   }
 
-  _updateTask(event, emit) async {
+  _updateTask(UpdateTask event, emit) async {
     try {
+      emit(TaskLoading());
+      for (var element in event.task.subTasks) {
+        element.task = event.task;
+      }
       Task? updated = await _taskRepository.updateTask(
         event.taskId,
         event.task,
@@ -100,7 +106,9 @@ class TaskBloc extends Bloc<TaskEvent, TaskState> {
       if (updated == null) {
         emit(const TaskError('Ошибка при обновлении задания'));
       } else {
+        event.tasks.removeWhere((element) => element.id == event.taskId);
         event.tasks.add(updated);
+        event.tasks.sort((a,b) => a.id!.compareTo(b.id!));
         emit(TaskListLoaded(event.tasks));
       }
     } on Exception catch (exception, _) {

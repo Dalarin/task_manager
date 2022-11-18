@@ -5,34 +5,84 @@ abstract class InviteEvent extends Equatable {
 
   @override
   List<Object> get props => [];
-
 }
 
-class UpdateInvite extends InviteEvent {
-  final int inviteId;
-  final Invite invite;
-  final List<Invite> invites;
+class UpdateTaskInvite extends InviteEvent {
+  final TaskInvite invite;
+  final List<TaskInvite> invites;
 
-  const UpdateInvite(this.inviteId, this.invite, this.invites);
-
+  const UpdateTaskInvite({required this.invite, required this.invites});
 }
 
-class CreateInvite extends InviteEvent {
+class UpdateListInvite extends InviteEvent {
+  final TaskInvite invite;
+  final List<ListInvite> invites;
+
+  const UpdateListInvite({required this.invite, required this.invites});
+}
+
+class CreateTaskInvite extends InviteEvent {
   final String email;
   final Task task;
+  final User invitedBy;
+  final List<TaskInvite> invites;
 
-  const CreateInvite(this.email, this.task);
-
+  const CreateTaskInvite({
+    required this.email,
+    required this.task,
+    required this.invites,
+    required this.invitedBy,
+  });
 }
 
-class DeleteInvite extends InviteEvent {
+class CreateListInvite extends InviteEvent {
+  final String email;
+  final ListModel listModel;
+  final User invitedBy;
+  final List<ListInvite> invites;
+
+  const CreateListInvite({
+    required this.email,
+    required this.listModel,
+    required this.invites,
+    required this.invitedBy,
+  });
+}
+
+class DeleteTaskInvite extends InviteEvent {
   final int id;
+  final List<TaskInvite> invites;
 
-  const DeleteInvite(this.id);
+  const DeleteTaskInvite({required this.id, required this.invites});
 }
 
-class GetInvites extends InviteEvent {
+class DeleteListInvite extends InviteEvent {
+  final int id;
+  final List<ListInvite> invites;
+
+  const DeleteListInvite({required this.id, required this.invites});
+}
+
+class GetInvitesByTask extends InviteEvent {
   final int taskId;
 
-  const GetInvites(this.taskId);
+  const GetInvitesByTask({required this.taskId});
+}
+
+class GetInvitesByList extends InviteEvent {
+  final int listId;
+
+  const GetInvitesByList({required this.listId});
+}
+
+class GetTaskInvitesByUser extends InviteEvent {
+  final int userId;
+
+  const GetTaskInvitesByUser({required this.userId});
+}
+
+class GetListInvitesByUser extends InviteEvent {
+  final int userId;
+
+  const GetListInvitesByUser({required this.userId});
 }

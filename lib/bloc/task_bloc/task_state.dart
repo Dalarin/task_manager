@@ -18,6 +18,8 @@ class TaskListLoaded extends TaskState {
 }
 
 
+class TaskUpdated extends TaskState{}
+
 
 class TaskError extends TaskState {
   final String message;

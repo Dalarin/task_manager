@@ -9,19 +9,19 @@ abstract class SubtaskEvent extends Equatable {
 
 class UpdateSubtask extends SubtaskEvent {
   final int subtaskId;
+  final Task task;
   final List<SubTask> subtaskList;
   final SubTask subTask;
 
-  const UpdateSubtask(this.subTask, this.subtaskId, this.subtaskList);
+  const UpdateSubtask(this.subTask, this.task, this.subtaskId, this.subtaskList);
 }
 
 class CreateSubtask extends SubtaskEvent {
-  final List<SubTask> subtaskList;
-  final int taskId;
+  final Task task;
   final String title;
 
 
-  const CreateSubtask(this.taskId, this.title, this.subtaskList);
+  const CreateSubtask(this.title, this.task);
 }
 
 class DeleteSubtask extends SubtaskEvent {

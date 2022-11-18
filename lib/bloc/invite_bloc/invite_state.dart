@@ -11,10 +11,15 @@ class InviteInitial extends InviteState {}
 
 class InviteLoading extends InviteState {}
 
-class InviteLoaded extends InviteState {
-  final List<Invite> invites;
+class InviteTaskLoaded extends InviteState {
+  final List<TaskInvite> invites;
 
-  const InviteLoaded(this.invites);
+  const InviteTaskLoaded(this.invites);
+}
+
+class InviteListLoaded extends InviteState {
+  final List<ListInvite> invites;
+  const InviteListLoaded({required this.invites});
 }
 
 class InviteError extends InviteState {

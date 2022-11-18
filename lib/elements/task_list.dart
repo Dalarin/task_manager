@@ -4,7 +4,6 @@ import 'package:task_manager/elements/task_element.dart';
 import '../models/task.dart';
 
 class TaskList extends StatelessWidget {
-  final BuildContext ctx;
   final List<Task> tasks;
   final double finalHeight;
   final double width;
@@ -12,7 +11,6 @@ class TaskList extends StatelessWidget {
 
   const TaskList({
     Key? key,
-    required this.ctx,
     required this.tasks,
     required this.width,
     required this.height,
@@ -21,7 +19,7 @@ class TaskList extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return _body(ctx);
+    return _body(context);
   }
 
   Widget _body(BuildContext context) {
@@ -31,9 +29,9 @@ class TaskList extends StatelessWidget {
         child: ListView.separated(
           shrinkWrap: true,
           scrollDirection: Axis.vertical,
-          itemBuilder: (context, index) => TaskElement(
+          itemBuilder: (_, index) => TaskElement(
             task: tasks[index],
-            context: context,
+            tasks: tasks,
           ),
           separatorBuilder: (context, index) => const SizedBox(height: 15),
           itemCount: tasks.length,

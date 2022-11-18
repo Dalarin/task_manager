@@ -1,24 +1,24 @@
 import 'package:task_manager/models/task.dart';
 import 'package:task_manager/models/user.dart';
 
-class Invite {
+class TaskInvite {
   int? id;
   Task task;
-  User user;
+  User? user;
   DateTime inviteDate;
 
-  Invite({
+  TaskInvite({
     this.id,
     required this.task,
-    required this.user,
+    this.user,
     required this.inviteDate,
   });
 
-  factory Invite.fromJson(Map<String, dynamic> json) {
-    return Invite(
+  factory TaskInvite.fromJson(Map<String, dynamic> json) {
+    return TaskInvite(
       id: json["id"],
-      task: Task.fromJson(json["task"]),
       user: User.fromJson(json["user"]),
+      task: Task.fromJson(json["task"]),
       inviteDate: DateTime.parse(json["inviteDate"]),
     );
   }
@@ -27,7 +27,17 @@ class Invite {
     return {
       "id": id,
       "task": task.toJson(),
-      "user": user.toJson(),
+      "invitedBy": user!.toJson(),
+      "inviteDate": inviteDate.toIso8601String(),
+    };
+  }
+
+  Map<String, dynamic> toJsonCreation() {
+    return {
+      "id": id,
+      "task": task.toJson(),
+      "user": {},
+      "invitedBy": user!.toJson(),
       "inviteDate": inviteDate.toIso8601String(),
     };
   }
@@ -35,7 +45,7 @@ class Invite {
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
-      other is Invite && runtimeType == other.runtimeType && id == other.id;
+      other is TaskInvite && runtimeType == other.runtimeType && id == other.id;
 
   @override
   int get hashCode => id.hashCode;

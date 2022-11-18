@@ -50,6 +50,7 @@ class _NavigationBarState extends State<NavigationBar> {
             topRight: Radius.circular(20.0),
           ),
           child: BottomNavigationBar(
+            type: BottomNavigationBarType.fixed,
             selectedItemColor: Theme.of(context).primaryColor,
             unselectedItemColor: Theme.of(context).unselectedWidgetColor,
             elevation: 5.0,

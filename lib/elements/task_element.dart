@@ -1,39 +1,41 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:task_manager/models/task.dart';
 import 'package:intl/intl.dart';
+import 'package:task_manager/models/task.dart';
 import 'package:task_manager/page/task_page.dart';
+import 'package:task_manager/providers/constants.dart';
 
 import '../bloc/task_bloc/task_bloc.dart';
 import '../models/tag.dart';
-import '../providers/constants.dart';
 
 class TaskElement extends StatelessWidget {
   final Task task;
-  final BuildContext context;
+  final List<Task> tasks;
 
   const TaskElement({
     Key? key,
     required this.task,
-    required this.context,
+    required this.tasks,
   }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => TaskPage(
-              task: task,
-            ),
+            builder: (_) {
+              return BlocProvider.value(
+                value: context.read<TaskBloc>(),
+                child: TaskPage(
+                  tasks: tasks,
+                  task: task,
+                ),
+              );
+            },
           ),
-        ).then((value) {
-          this.context.read<TaskBloc>().add(GetTaskList(user!.id!));
-        });
+        );
       },
       child: Material(
         elevation: 3.0,
@@ -41,15 +43,15 @@ class TaskElement extends StatelessWidget {
           borderRadius: BorderRadius.circular(12),
         ),
         child: SizedBox(
-          width: width,
-          height: height * 0.1,
+          width: MediaQuery.of(context).size.width,
+          height: MediaQuery.of(context).size.height * 0.1,
           child: ListTile(
             title: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  task.title,
+                  task.title.trim(),
                   style: TextStyle(
                     color: task.isCompleted
                         ? Theme.of(context).disabledColor
@@ -82,7 +84,7 @@ class TaskElement extends StatelessWidget {
             ),
             leading: CircleAvatar(
               backgroundColor: Theme.of(context).primaryColor,
-              radius: height * 0.03,
+              radius: MediaQuery.of(context).size.height * 0.03,
               child: Icon(
                 task.isCompleted
                     ? Icons.check_circle_outline

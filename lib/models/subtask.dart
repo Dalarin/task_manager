@@ -1,15 +1,16 @@
+import 'package:task_manager/models/task.dart';
+
 class SubTask {
   int? id;
-  int taskId;
+  Task? task;
   String title;
   bool isCompleted;
 
-  SubTask({this.id, required this.taskId, required this.title, required this.isCompleted});
+  SubTask({this.id, this.task, required this.title, this.isCompleted = false});
 
   factory SubTask.fromJson(Map<String, dynamic> json) {
     return SubTask(
       id: json["id"],
-      taskId: json["taskID"],
       title: json["title"],
       isCompleted: json["completed"]
     );
@@ -18,11 +19,17 @@ class SubTask {
   Map<String, dynamic> toJson() {
     return {
       "id": id,
-      "taskID": taskId,
+      "task": {
+        "id": task?.id ?? 0
+      },
       "title": title,
       "completed": isCompleted
     };
   }
+
+
+
+
 
   @override
   bool operator ==(Object other) =>

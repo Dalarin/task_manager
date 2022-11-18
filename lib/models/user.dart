@@ -33,6 +33,11 @@ class User {
     };
   }
 
+  @override
+  String toString() {
+    return 'User{id: $id, password: $password, phone: $phone, email: $email, fio: $fio}';
+  }
+
 //
 
 }

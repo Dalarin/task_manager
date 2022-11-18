@@ -1,5 +1,5 @@
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 import 'package:task_manager/providers/storage_manager.dart';
 import 'package:task_manager/providers/constants.dart' as constant;
@@ -52,6 +52,7 @@ class AuthBloc extends Bloc<AuthEvent, AuthState> {
         emit(AuthLoading());
         final user = await _userRepository.auth(event.email, event.password);
         if (user != null) {
+          constant.user = user;
           StorageManager.saveUser(user);
           emit(AuthLoaded(user));
         } else {

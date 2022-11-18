@@ -30,7 +30,8 @@ class TagProvider {
   Future<Tag?> createTag(Tag tag) async {
     Response response = await post(
       Uri.parse('$apiURI/tags/'),
-      body: tag.toJson(),
+      body: jsonEncode(tag.toJson()),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 201) {
       Tag? tag = Tag.fromJson(jsonDecode(response.body));
@@ -42,7 +43,8 @@ class TagProvider {
   Future<Tag?> updateTag(int tagId, Tag tag) async {
     Response response = await put(
       Uri.parse('$apiURI/tags/?id=$tagId'),
-      body: tag.toString(),
+      body: jsonEncode(tag.toJson()),
+      headers: {'Content-Type': 'application/json'},
     );
     if (response.statusCode == 200) {
       Tag? tag = Tag.fromJson(jsonDecode(response.body));

@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/bloc/register_bloc/register_bloc.dart';
-import 'package:task_manager/providers/constants.dart';
 import 'package:task_manager/repository/user_repository.dart';
 import '../elements/navigation_bar.dart' as element;
 
@@ -14,23 +13,20 @@ class RegisterPage extends StatelessWidget {
       body: SafeArea(
         child: BlocProvider<RegisterBloc>(
           create: (context) => RegisterBloc(UserRepository()),
-          child: BlocListener<RegisterBloc, RegisterState>(
-            child: BlocBuilder<RegisterBloc, RegisterState>(
-              builder: (context, state) {
-                if (state is RegisterLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else {
-                  return RegisterInputForm(context: context);
-                }
-              },
-            ),
+          child: BlocConsumer<RegisterBloc, RegisterState>(
+            builder: (context, state) {
+              if (state is RegisterLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else {
+                return RegisterInputForm(context: context);
+              }
+            },
             listener: (context, state) {
               if (state is RegisterError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   _buildSnackBar(state.message, context),
                 );
               } else if (state is RegisterLoaded) {
-                user = state.user;
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
@@ -173,7 +169,7 @@ class _RegisterInputFormState extends State<RegisterInputForm> {
         height: height * 0.08,
         width: width,
         alignment: Alignment.center,
-        decoration:  BoxDecoration(
+        decoration: BoxDecoration(
           color: Theme.of(context).primaryColor,
           borderRadius: const BorderRadius.all(
             Radius.circular(20),

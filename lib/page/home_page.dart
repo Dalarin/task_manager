@@ -2,27 +2,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/elements/list_of_lists_element.dart';
 import 'package:task_manager/providers/constants.dart';
-import 'package:task_manager/models/list.dart' as model;
+import 'package:task_manager/models/list.dart';
+import 'package:task_manager/repository/task_repository.dart';
 
 import '../bloc/list_bloc/list_bloc.dart';
-import '../elements/list_of_tasks_element.dart';
+import '../bloc/task_bloc/task_bloc.dart';
+import '../elements/loading_element.dart';
+import '../elements/task_list.dart';
 
 class HomePage extends StatelessWidget {
   const HomePage({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
+    return const Scaffold(
       extendBody: true,
-      body: HomePageContent(context: context),
+      body: HomePageContent(),
     );
   }
 }
 
 class HomePageContent extends StatelessWidget {
-  final BuildContext context;
-
-  const HomePageContent({Key? key, required this.context}) : super(key: key);
+  const HomePageContent({Key? key}) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -45,13 +46,54 @@ class HomePageContent extends StatelessWidget {
               const SizedBox(height: 15),
               _listHeader(text: 'Список задач'),
               const SizedBox(height: 15),
-              ListOfTasks(
-                finalHeight: 0.4,
-                boxSize: MediaQuery.of(context).size.height * 0.4,
-              ),
+              _listOfTasks(
+                context,
+                MediaQuery.of(context).size.height,
+                MediaQuery.of(context).size.width,
+              )
             ],
           ),
         ),
+      ),
+    );
+  }
+  
+
+  Widget _listOfTasks(BuildContext context, double height, double width) {
+    return BlocProvider<TaskBloc>(
+      create: (context) =>
+          TaskBloc(TaskRepository())..add(GetTaskList(user!.id!)),
+      child: Builder(
+        builder: (context) {
+          return BlocBuilder<TaskBloc, TaskState>(
+            builder: (context, state) {
+              if (state is TaskLoading) {
+                return LoadingElement(
+                  height: height * 0.1,
+                  width: width * 0.45,
+                  scrollDirection: Axis.vertical,
+                  boxSize: height * 0.4,
+                );
+              } else if (state is TaskError) {
+                return Text(state.message);
+              } else if (state is TaskListLoaded) {
+                return TaskList(
+                  tasks: state.list,
+                  width: width,
+                  height: height,
+                  finalHeight: 0.4,
+                );
+              } else {
+                return TaskList(
+                  tasks: const [],
+                  width: width,
+                  height: height,
+                  finalHeight: 0.4,
+                );
+              }
+            },
+          );
+        }
       ),
     );
   }
@@ -115,8 +157,6 @@ class CreateListBottomMenu extends StatefulWidget {
 
 class _CreateListBottomMenuState extends State<CreateListBottomMenu> {
   late TextEditingController titleController;
-  late double height;
-  late double width;
 
   @override
   void initState() {
@@ -126,14 +166,12 @@ class _CreateListBottomMenuState extends State<CreateListBottomMenu> {
 
   @override
   Widget build(BuildContext context) {
-    width = MediaQuery.of(context).size.width;
-    height = MediaQuery.of(context).size.height;
     return Padding(
       padding: EdgeInsets.only(
         bottom: MediaQuery.of(context).viewInsets.bottom,
       ),
       child: Container(
-        height: height * 0.3,
+        height: MediaQuery.of(context).size.height * 0.3,
         padding: const EdgeInsets.symmetric(vertical: 15, horizontal: 15),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,20 +194,18 @@ class _CreateListBottomMenuState extends State<CreateListBottomMenu> {
     );
   }
 
+// TODO: виджеты перестраиваются, переделать
   Widget _createButton(BuildContext context) {
     return InkWell(
       onTap: () {
-        BlocProvider.of<ListBloc>(context).add(CreateList(
-          user!.id!,
-          titleController.text,
-          DateTime.now(),
-          widget.list as List<model.ListModel>,
-        ));
+        final cubit = context.read<ListBloc>();
+        cubit.add(CreateList(user!.id!, titleController.text, DateTime.now(),
+            widget.list as List<ListModel>));
         Navigator.of(context).pop();
       },
       child: Container(
-        height: height * 0.07,
-        width: width,
+        height: MediaQuery.of(context).size.height * 0.07,
+        width: MediaQuery.of(context).size.width,
         alignment: Alignment.center,
         decoration: const BoxDecoration(
           color: Color(0xFF3B378E),

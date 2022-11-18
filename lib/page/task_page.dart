@@ -5,24 +5,29 @@ import 'package:task_manager/bloc/invite_bloc/invite_bloc.dart';
 import 'package:task_manager/bloc/list_bloc/list_bloc.dart';
 import 'package:task_manager/bloc/subtask_bloc/subtask_bloc.dart';
 import 'package:task_manager/bloc/tag_bloc/tag_bloc.dart';
+import 'package:task_manager/elements/select_list.dart';
+import 'package:task_manager/elements/select_tags.dart';
+import 'package:task_manager/elements/share_task.dart';
+import 'package:task_manager/elements/users_in_task.dart';
 import 'package:task_manager/models/subtask.dart';
 import 'package:task_manager/models/task.dart';
 import 'package:task_manager/repository/invite_repository.dart';
 import 'package:task_manager/repository/list_repository.dart';
 import 'package:task_manager/repository/subtask_repository.dart';
 import 'package:task_manager/repository/tag_repository.dart';
-import 'package:task_manager/repository/task_repository.dart';
-import 'package:task_manager/models/list.dart' as model;
 
 import '../bloc/task_bloc/task_bloc.dart';
-import '../models/tag.dart';
+import '../bloc/user_bloc/user_bloc.dart';
 import '../providers/constants.dart';
+import '../repository/user_repository.dart';
 
 class TaskPage extends StatelessWidget {
   final Task task;
+  final List<Task> tasks;
 
   const TaskPage({
     Key? key,
+    required this.tasks,
     required this.task,
   }) : super(key: key);
 
@@ -30,17 +35,17 @@ class TaskPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return MultiBlocProvider(
       providers: [
-        BlocProvider<TaskBloc>(
-          create: (context) => TaskBloc(TaskRepository()),
-        ),
         BlocProvider<TagBloc>(
           create: (context) => TagBloc(TagRepository()),
         ),
-        BlocProvider<ListBloc>(
-          create: (context) => ListBloc(ListRepository()),
+        BlocProvider<UserBloc>(
+          create: (context) => UserBloc(UserRepository()),
         ),
         BlocProvider<SubtaskBloc>(
           create: (context) => SubtaskBloc(SubtaskRepository()),
+        ),
+        BlocProvider<ListBloc>(
+          create: (context) => ListBloc(ListRepository()),
         ),
         BlocProvider<InviteBloc>(
           create: (context) => InviteBloc(InviteRepository()),
@@ -51,7 +56,10 @@ class TaskPage extends StatelessWidget {
           return GestureDetector(
             onTap: () => FocusManager.instance.primaryFocus?.unfocus(),
             child: Scaffold(
-              bottomNavigationBar: _bottomNavigationBar(context),
+              bottomNavigationBar: _bottomNavigationBar(
+                context,
+                task,
+              ),
               body: SafeArea(
                 child: Padding(
                   padding: const EdgeInsets.symmetric(
@@ -60,8 +68,8 @@ class TaskPage extends StatelessWidget {
                   ),
                   child: SingleChildScrollView(
                     child: TaskPageContent(
-                      context: context,
                       task: task,
+                      tasks: tasks,
                     ),
                   ),
                 ),
@@ -76,9 +84,13 @@ class TaskPage extends StatelessWidget {
   void deleteTask(BuildContext context) {
     Widget okButton = TextButton(
       onPressed: () {
-        context.read<TaskBloc>().add(DeleteTask(task.id!, []));
-        Navigator.of(context).pop();
-        Navigator.of(context).pop();
+        final cubit = context.read<TaskBloc>();
+        cubit.add(DeleteTask(task.id!, tasks));
+        Navigator.pop(context);
+        Future.delayed(
+          const Duration(milliseconds: 500),
+          () => Navigator.pop(context),
+        );
       },
       child: const Text('Да'),
     );
@@ -109,10 +121,10 @@ class TaskPage extends StatelessWidget {
     IconData iconData,
     String text,
     Function(BuildContext) onTap,
-    BuildContext context,
+    BuildContext taskContext,
   ) {
     return InkWell(
-      onTap: () => onTap(context),
+      onTap: () => onTap(taskContext),
       child: Row(
         children: [
           Icon(iconData),
@@ -123,7 +135,7 @@ class TaskPage extends StatelessWidget {
     );
   }
 
-  Widget? _bottomNavigationBar(BuildContext context) {
+  Widget? _bottomNavigationBar(BuildContext context, Task task) {
     if (user!.id == task.userID) {
       return Container(
         padding: const EdgeInsets.symmetric(
@@ -144,7 +156,16 @@ class TaskPage extends StatelessWidget {
               task.isCompleted
                   ? 'Отметить задачу\nактивной'
                   : 'Отметить задачу\nвыполненной',
-              (context) {},
+              (context) {
+                // TODO: разобраться
+                final cubit = context.read<TaskBloc>();
+                task.isCompleted = !task.isCompleted;
+                cubit.add(UpdateTask(task.id!, task, tasks));
+                Future.delayed(
+                  const Duration(milliseconds: 500),
+                  () => Navigator.pop(context),
+                );
+              },
               context,
             ),
           ],
@@ -155,29 +176,15 @@ class TaskPage extends StatelessWidget {
   }
 }
 
-class TaskPageContent extends StatefulWidget {
-  final BuildContext context;
+class TaskPageContent extends StatelessWidget {
   final Task task;
+  final List<Task> tasks;
 
-  const TaskPageContent({Key? key, required this.context, required this.task})
-      : super(key: key);
-
-  @override
-  State<TaskPageContent> createState() => _TaskPageContentState();
-}
-
-class _TaskPageContentState extends State<TaskPageContent> {
-  late TextEditingController titleController;
-  late TextEditingController descriptionController;
-
-  @override
-  void initState() {
-    titleController = TextEditingController();
-    descriptionController = TextEditingController();
-    descriptionController.text = widget.task.description;
-    titleController.text = widget.task.title;
-    super.initState();
-  }
+  const TaskPageContent({
+    Key? key,
+    required this.task,
+    required this.tasks,
+  }) : super(key: key);
 
   @override
   Widget build(BuildContext context) {
@@ -186,13 +193,13 @@ class _TaskPageContentState extends State<TaskPageContent> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _header(widget.context),
+        _titleField(context, task, tasks),
         const SizedBox(height: 15),
-        _tagsPanel(widget.context, widget.task),
+        _tagsPanel(context, task, tasks),
         const SizedBox(height: 15),
-        _actionsPanel(widget.context, widget.task, height, width),
+        _actionsPanel(context, task, tasks, height, width),
         const SizedBox(height: 15),
-        _subtasksPanel(widget.context, widget.task, width, height)
+        _subtasksPanel(context, task, width, height)
       ],
     );
   }
@@ -203,6 +210,184 @@ class _TaskPageContentState extends State<TaskPageContent> {
       style: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
     );
   }
+
+  Widget _titleField(BuildContext context, Task task, List<Task> tasks) {
+    TextEditingController titleController = TextEditingController();
+    titleController.text = task.title;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+      children: [
+        FocusScope(
+          child: Focus(
+            onFocusChange: (focus) {
+              if (focus == false) {
+                task.title = titleController.text;
+                final cubit = context.read<TaskBloc>();
+                cubit.add(UpdateTask(task.id!, task, tasks));
+              }
+            },
+            child: TextField(
+              readOnly: !(user!.id == task.userID),
+              controller: titleController,
+              decoration: const InputDecoration(
+                border: InputBorder.none,
+                filled: false,
+              ),
+              style: const TextStyle(
+                fontWeight: FontWeight.bold,
+                fontSize: 25,
+              ),
+              maxLines: null,
+            ),
+          ),
+        ),
+        const SizedBox(height: 15),
+        const Text('Дата завершения:'),
+        const SizedBox(height: 5),
+        Text(DateFormat.yMMMd('ru').format(task.completeDate))
+      ],
+    );
+  }
+
+  Widget _descriptionField(BuildContext context, Task task) {
+    TextEditingController descriptionController = TextEditingController();
+    descriptionController.text = task.description;
+    return Material(
+      elevation: 3.0,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20),
+      ),
+      child: FocusScope(
+        child: Focus(
+          onFocusChange: (focus) {
+            if (focus == false) {
+              task.description = descriptionController.text;
+              final cubit = context.read<TaskBloc>();
+              cubit.add(UpdateTask(task.id!, task, []));
+            }
+          },
+          child: TextField(
+            readOnly: !(user!.id == task.userID),
+            controller: descriptionController,
+            maxLines: 6,
+            decoration: const InputDecoration(
+              filled: false,
+              label: Text('Описание'),
+              labelStyle: TextStyle(
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tagsPanel(BuildContext context, Task task, List<Task> tasks) {
+    return BlocBuilder<TagBloc, TagState>(
+      bloc: context.read<TagBloc>()..add(GetTagsListOfUser(user!.id!)),
+      builder: (context, state) {
+        if (state is TagListLoaded) {
+          return SelectTagPanel(
+            task: task,
+            context: context,
+            userTags: state.tagModel,
+            tasks: tasks,
+          );
+        } else if (state is TagLoading) {
+          return const Center(child: CircularProgressIndicator());
+        } else {
+          return SelectTagPanel(
+            task: task,
+            context: context,
+            userTags: [],
+            tasks: tasks,
+          );
+        }
+      },
+    );
+  }
+
+  Widget _actionsPanel(BuildContext context, Task task, List<Task> tasks,
+      double height, double width) {
+    if (user!.id == task.userID) {
+      return Row(
+        children: [
+          _action(
+            Icons.share,
+            context,
+            task,
+            tasks,
+            _shareTask,
+            'Поделиться\nзадачей',
+            width,
+            height,
+          ),
+          const SizedBox(width: 15),
+          _action(
+            Icons.list_alt_rounded,
+            context,
+            task,
+            tasks,
+            _selectLists,
+            'Списки',
+            width,
+            height,
+          ),
+          const SizedBox(width: 15),
+          _action(
+            Icons.person,
+            context,
+            task,
+            tasks,
+            _showUsers,
+            'Пользователи',
+            width,
+            height,
+          ),
+        ],
+      );
+    }
+    return Container();
+  }
+
+  Widget _action(
+    IconData icon,
+    BuildContext context,
+    Task task,
+    List<Task> tasks,
+    Function(BuildContext, Task, List<Task> tasks,  double, double) onTap,
+    String text,
+    double width,
+    double height,
+  ) {
+    return InkWell(
+      onTap: () => onTap(context, task, tasks, height, width),
+      child: Material(
+        elevation: 8.0,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(15.0),
+          ),
+        ),
+        child: Container(
+          width: width * 0.27,
+          height: height * 0.12,
+          alignment: Alignment.center,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon),
+              Text(text),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  ///////////////////*********************SUBTASK********************/////////////////
 
   Widget _subtasksPanel(
     BuildContext context,
@@ -219,28 +404,35 @@ class _TaskPageContentState extends State<TaskPageContent> {
         const SizedBox(height: 15),
         _title('Описание'),
         const SizedBox(height: 15),
-        _descriptionField(context)
+        _descriptionField(context, task)
       ],
     );
   }
 
-  Widget _descriptionField(BuildContext context) {
-    return Material(
-      elevation: 3.0,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: TextField(
-        controller: descriptionController,
-        maxLines: 6,
-        decoration: const InputDecoration(
-          filled: false,
-          label: Text('Описание'),
-          labelStyle: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-      ),
+  Widget _subTaskListBuilder(
+    BuildContext context,
+    Task task,
+    double width,
+    double height,
+  ) {
+    return BlocConsumer<SubtaskBloc, SubtaskState>(
+      bloc: context.read<SubtaskBloc>(),
+      listener: (context, state) {
+        if (state is SubtaskError) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              duration: const Duration(seconds: 3),
+              content: Text(
+                state.message,
+                textAlign: TextAlign.center,
+              ),
+            ),
+          );
+        }
+      },
+      builder: (context, state) {
+        return _subtaskList(context, task.subTasks, task);
+      },
     );
   }
 
@@ -262,9 +454,8 @@ class _TaskPageContentState extends State<TaskPageContent> {
           filled: false,
         ),
         onSubmitted: (String text) {
-          context
-              .read<SubtaskBloc>()
-              .add(CreateSubtask(task.id!, controller.text, subtasks));
+          final cubit = context.read<SubtaskBloc>();
+          cubit.add(CreateSubtask(controller.text, task));
           controller.clear();
         },
       ),
@@ -272,10 +463,15 @@ class _TaskPageContentState extends State<TaskPageContent> {
   }
 
   void deleteSubtask(
-      BuildContext context, SubTask subTask, List<SubTask> subtasks) {
+    BuildContext context,
+    SubTask subTask,
+    List<SubTask> subtasks,
+    Task task,
+  ) {
     Widget okButton = TextButton(
       onPressed: () {
-        context.read<SubtaskBloc>().add(DeleteSubtask(subTask.id!, subtasks));
+        final cubit = context.read<SubtaskBloc>();
+        cubit.add(DeleteSubtask(subTask.id!, subtasks));
         Navigator.pop(context);
       },
       child: const Text('Да'),
@@ -307,9 +503,10 @@ class _TaskPageContentState extends State<TaskPageContent> {
     BuildContext context,
     SubTask subTask,
     List<SubTask> subtasks,
+    Task task,
   ) {
     return InkWell(
-      onLongPress: () => deleteSubtask(context, subTask, subtasks),
+      onLongPress: () => deleteSubtask(context, subTask, subtasks, task),
       child: ListTile(
         contentPadding: EdgeInsets.zero,
         title: Text(
@@ -328,54 +525,22 @@ class _TaskPageContentState extends State<TaskPageContent> {
           value: subTask.isCompleted,
           onChanged: (bool? value) {
             subTask.isCompleted = !subTask.isCompleted;
-            context
-                .read<SubtaskBloc>()
-                .add(UpdateSubtask(subTask, subTask.id!, subtasks));
+            final cubit = context.read<SubtaskBloc>();
+            cubit.add(UpdateSubtask(subTask, task, subTask.id!, subtasks));
           },
         ),
       ),
     );
   }
 
-  Widget _subTaskListBuilder(
-    BuildContext context,
-    Task task,
-    double width,
-    double height,
-  ) {
-    return BlocConsumer<SubtaskBloc, SubtaskState>(
-      bloc: context.read<SubtaskBloc>()..add(GetSubtasks(widget.task.id!)),
-      listener: (context, state) {
-        if (state is SubtaskError) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              duration: const Duration(seconds: 3),
-              content: Text(
-                state.message,
-                textAlign: TextAlign.center,
-              ),
-            ),
-          );
-        }
-      },
-      builder: (context, state) {
-        if (state is SubtaskLoaded) {
-          return _subtaskList(state.subTasks, task);
-        } else {
-          return _subtaskList([], task);
-        }
-      },
-    );
-  }
-
-  Widget _subtaskList(List<SubTask> subtasks, Task task) {
+  Widget _subtaskList(BuildContext context, List<SubTask> subtasks, Task task) {
     return Column(
       children: [
         ListView.separated(
           physics: const NeverScrollableScrollPhysics(),
           shrinkWrap: true,
           itemBuilder: (context, index) =>
-              _subTask(context, subtasks[index], subtasks),
+              _subTask(context, subtasks[index], subtasks, task),
           separatorBuilder: (context, index) => const SizedBox(height: 10),
           itemCount: subtasks.length,
         ),
@@ -384,326 +549,73 @@ class _TaskPageContentState extends State<TaskPageContent> {
     );
   }
 
-  Widget _header(BuildContext context) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        TextField(
-          controller: titleController,
-          decoration: const InputDecoration(
-            border: InputBorder.none,
-            filled: false,
-          ),
-          style: const TextStyle(
-            fontWeight: FontWeight.bold,
-            fontSize: 25,
-          ),
-          maxLines: null,
-        ),
-        const SizedBox(height: 15),
-        const Text('Дата завершения:'),
-        const SizedBox(height: 5),
-        Text(DateFormat.yMMMd('ru').format(widget.task.completeDate))
-      ],
-    );
-  }
+  ///////////////////*********************SUBTASK********************/////////////////
 
-  Widget _tagsPanel(BuildContext context, Task task) {
-    return BlocBuilder<TagBloc, TagState>(
-      bloc: context.read<TagBloc>()..add(GetTagsListOfUser(user!.id!)),
-      builder: (context, state) {
-        if (state is TagListLoaded) {
-          return SelectTagPanel(
-            task: task,
-            context: context,
-            userTags: state.tagModel,
-          );
-        } else if (state is TagLoading) {
-          return const Center(child: CircularProgressIndicator());
-        } else {
-          return SelectTagPanel(
-            task: task,
-            context: context,
-            userTags: [],
-          );
-        }
-      },
-    );
-  }
-
-  Widget _selectListsView(
-    BuildContext context,
-    List<model.ListModel> lists,
-    Task task,
-    double height,
-    double width,
-    StateSetter stateSetter,
-  ) {
-    if (lists.isNotEmpty) {
-      return ListView.builder(
-        itemBuilder: (ctx, index) {
-          return CheckboxListTile(
-            value: lists[index].tasks.contains(task),
-            title: Text(lists[index].title),
-            checkboxShape: const CircleBorder(),
-            onChanged: (bool) {
-              stateSetter(() {
-                !lists[index].tasks.contains(task)
-                    ? lists[index].tasks.add(task)
-                    : lists[index].tasks.remove(task);
-              });
-              context
-                  .read<ListBloc>()
-                  .add(UpdateList(lists[index].id!, lists[index]));
-            },
-          );
-        },
-        itemCount: lists.length,
-      );
-    } else {
-      return const Center(child: Text('Отсутствуют созданные списки'));
-    }
-  }
-
-  AlertDialog _alertDialog(
+  void _selectLists(
     BuildContext context,
     Task task,
-    List<model.ListModel> lists,
+    List<Task> tasks,
     double height,
     double width,
   ) {
-    return AlertDialog(
-      title: const Text('Выбор списков'),
-      content: StatefulBuilder(
-        builder: (ctx, stateSetter) {
-          return SizedBox(
-            height: height * 0.5,
-            width: width * 0.75,
-            child: _selectListsView(
-              context,
-              lists,
-              task,
-              height,
-              width,
-              stateSetter,
-            ),
-          );
-        },
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext dialogContext) => SelectListDialog(
+        context: context,
+        task: task,
+        tasks: tasks,
+        height: height,
+        width: width,
       ),
     );
   }
 
-  void _selectLists(
-      BuildContext context, Task task, double height, double width) {
+  _shareTask(BuildContext context, Task task, List<Task> tasks,
+      double height, double width) {
+    showDialog<void>(
+      context: context,
+      builder: (BuildContext _) => ShareTaskDialog(
+        context: context,
+        task: task,
+        height: height,
+        width: width,
+      ),
+    );
+  }
+
+  _showUsers(
+      BuildContext context, Task task, List<Task> tasks, double width, height) {
     showDialog<void>(
       context: context,
       builder: (BuildContext dialogContext) {
-        return BlocBuilder<ListBloc, ListState>(
-          bloc: context.read<ListBloc>()..add(LoadLists(user!.id!)),
-          builder: (ctx, state) {
-            if (state is ListLoaded) {
-              return _alertDialog(context, task, state.list, height, width);
-            } else if (state is ListLoading) {
-              return const Center(child: CircularProgressIndicator());
-            } else {
-              return _alertDialog(context, task, [], height, width);
+        final cubit = context.read<UserBloc>();
+        return BlocConsumer<UserBloc, UserState>(
+          bloc: cubit..add(GetUsersByTaskId(taskId: task.id!)),
+          listener: (context, state) {
+            if (state is UserError) {
+              ScaffoldMessenger.of(context).showSnackBar(
+                SnackBar(
+                  duration: const Duration(seconds: 3),
+                  content: Text(
+                    state.message,
+                    textAlign: TextAlign.center,
+                  ),
+                ),
+              );
             }
+          },
+          builder: (_, state) {
+            if (state is UserLoading) {
+              return const Center(child: CircularProgressIndicator());
+            } else if (state is UserListLoaded) {
+              return UserInTask(task: task, users: state.users);
+            }
+            return UserInTask(task: task, users: []);
           },
         );
       },
     );
   }
-
-  Widget _actionsPanel(
-      BuildContext context, Task task, double height, double width) {
-    return Row(
-      children: [
-        _action(
-          Icons.share,
-          context,
-          task,
-          _selectLists,
-          'Поделиться\nзадачей',
-          width,
-          height,
-        ),
-        const SizedBox(width: 15),
-        _action(
-          Icons.list_alt_rounded,
-          context,
-          task,
-          _selectLists,
-          'Списки',
-          width,
-          height
-        ),
-      ],
-    );
-  }
-
-  Widget _action(
-    IconData icon,
-    BuildContext context,
-    Task task,
-    Function(BuildContext, Task, double, double) onTap,
-    String text,
-    double width,
-    double height,
-  ) {
-    return InkWell(
-      onTap: () => onTap(context, task, height, width),
-      child: Material(
-        elevation: 8.0,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(15.0),
-          ),
-        ),
-        child: Container(
-          width: width * 0.3,
-          height: height * 0.12,
-          alignment: Alignment.center,
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon),
-              Text(text),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
 }
 
 // TODO: НЕ НРАВИТСЯ, ПЕРЕДЕЛАТЬ, КОДЕР ДЕБИЛ
-class SelectTagPanel extends StatefulWidget {
-  final Task task;
-  final BuildContext context;
-  final List<Tag> userTags;
-
-  const SelectTagPanel({
-    Key? key,
-    required this.task,
-    required this.context,
-    required this.userTags,
-  }) : super(key: key);
-
-  @override
-  State<SelectTagPanel> createState() => _SelectTagPanelState();
-}
-
-class _SelectTagPanelState extends State<SelectTagPanel> {
-  @override
-  Widget build(BuildContext context) {
-    List<Widget> tags = widget.task.tags
-        .map((tag) => _tag(widget.context, tag, widget.task))
-        .toList();
-    tags.add(_addTagChip(widget.context, widget.userTags, widget.task));
-    return Wrap(spacing: 10, children: List.of(tags));
-  }
-
-  Widget _addTagChip(BuildContext context, List<Tag> tags, Task task) {
-    return ChoiceChip(
-      label: const Text('Добавить тэг'),
-      selected: true,
-      onSelected: (bool value) {
-        _selectTagDialog(context, tags, task);
-      },
-    );
-  }
-
-  void _editTags(
-    BuildContext context,
-    Task task,
-    List<Tag> tags,
-    Tag tag,
-    StateSetter stateSetter,
-    bool selected,
-  ) {
-    selected ? tags.remove(tag) : tags.add(tag);
-    setState(() {});
-    stateSetter(() {});
-    context.read<TaskBloc>().add(UpdateTask(task.id!, task, []));
-  }
-
-  Widget _tagElement(
-    BuildContext context,
-    Tag tag,
-    List<Tag> selectedTags,
-    StateSetter stateSetter,
-    Task task,
-  ) {
-    bool selected = selectedTags.contains(tag);
-    return ListTile(
-      title: Text(tag.title),
-      trailing: Checkbox(
-        value: selected,
-        shape: const CircleBorder(),
-        onChanged: (bool? value) {
-          _editTags(context, task, selectedTags, tag, stateSetter, selected);
-        },
-      ),
-      leading: CircleAvatar(
-        radius: 10,
-        backgroundColor: Color(int.parse(tag.color)),
-      ),
-    );
-  }
-
-  Widget _tagsList(BuildContext context, List<Tag> tags, Task task,
-      StateSetter stateSetter) {
-    if (tags.isNotEmpty) {
-      return ListView.builder(
-        itemBuilder: (ctx, index) => _tagElement(
-          context,
-          tags[index],
-          task.tags,
-          stateSetter,
-          task,
-        ),
-        itemCount: tags.length,
-      );
-    } else {
-      return const Center(child: Text('Отсутствуют созданные категории'));
-    }
-  }
-
-  void _selectTagDialog(BuildContext context, List<Tag> tags, Task task) {
-    showDialog<void>(
-      context: context,
-      builder: (BuildContext dialogContext) {
-        return AlertDialog(
-          title: const Text('Выбор категорий'),
-          content: StatefulBuilder(
-            builder: (ctx, stateSetter) {
-              return SizedBox(
-                height: MediaQuery.of(context).size.height * 0.5,
-                width: MediaQuery.of(context).size.width,
-                child: _tagsList(context, tags, task, stateSetter),
-              );
-            },
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _tag(BuildContext context, Tag tag, Task task) {
-    return RawChip(
-      label: Text(tag.title),
-      labelStyle: const TextStyle(color: Colors.white),
-      showCheckmark: false,
-      deleteIcon: const Icon(Icons.cancel_outlined),
-      selected: true,
-      selectedColor: Color(int.parse(tag.color)),
-      onDeleted: () {
-        setState(() {
-          task.tags.remove(tag);
-          context.read<TaskBloc>().add(UpdateTask(task.id!, task, []));
-        });
-      },
-    );
-  }
-}

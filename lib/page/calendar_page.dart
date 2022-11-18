@@ -44,9 +44,9 @@ class CalendarPage extends StatelessWidget {
     );
   }
 
-  Widget _listView(BuildContext ctx, double height, double width) {
+  Widget _listView(BuildContext context, double height, double width) {
     return BlocBuilder<TaskBloc, TaskState>(
-      bloc: ctx.read<TaskBloc>(),
+      bloc: context.read<TaskBloc>(),
       builder: (context, state) {
         if (state is TaskLoading) {
           return LoadingElement(
@@ -57,7 +57,6 @@ class CalendarPage extends StatelessWidget {
           );
         } else if (state is TaskListLoaded) {
           return TaskList(
-            ctx: context,
             tasks: state.list,
             width: width,
             height: height,
@@ -65,7 +64,6 @@ class CalendarPage extends StatelessWidget {
           );
         } else {
           return TaskList(
-            ctx: context,
             tasks: const [],
             width: width,
             height: height,

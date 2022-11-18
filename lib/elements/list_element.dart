@@ -1,28 +1,37 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/page/list_page.dart';
+import '../bloc/list_bloc/list_bloc.dart';
 import '../models/list.dart';
 import 'package:intl/intl.dart';
 
 class ListElement extends StatelessWidget {
   final ListModel list;
+  final List<ListModel> lists;
 
-  const ListElement({Key? key, required this.list}) : super(key: key);
+  const ListElement({Key? key, required this.list, required this.lists})
+      : super(key: key);
 
   @override
   Widget build(BuildContext context) {
-    double width = MediaQuery.of(context).size.width;
-    double height = MediaQuery.of(context).size.height;
     return InkWell(
       onTap: () {
         Navigator.push(
           context,
           MaterialPageRoute(
-            builder: (context) => const ListPage(),
+            builder: (_) {
+              return BlocProvider.value(
+                value: context.read<ListBloc>(),
+                child: ListPage(
+                  list: list,
+                  lists: lists,
+                ),
+              );
+            },
           ),
         );
       },
       child: Material(
-        elevation: 0,
         shape: const RoundedRectangleBorder(
           borderRadius: BorderRadius.all(
             Radius.circular(20),
@@ -30,8 +39,8 @@ class ListElement extends StatelessWidget {
         ),
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 10, horizontal: 5),
-          height: height * 0.25,
-          width: width * 0.45,
+          height: MediaQuery.of(context).size.height * 0.25,
+          width: MediaQuery.of(context).size.width * 0.45,
           decoration: BoxDecoration(
             borderRadius: const BorderRadius.all(
               Radius.circular(20),
@@ -49,7 +58,11 @@ class ListElement extends StatelessWidget {
                   fontWeight: FontWeight.bold,
                 ),
               ),
-              _progressBar(context, width, height)
+              _progressBar(
+                context,
+                MediaQuery.of(context).size.width,
+                MediaQuery.of(context).size.height,
+              )
             ],
           ),
         ),

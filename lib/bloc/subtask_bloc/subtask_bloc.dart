@@ -1,9 +1,10 @@
 import 'dart:io';
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
 
 import '../../models/subtask.dart';
+import '../../models/task.dart';
 import '../../repository/subtask_repository.dart';
 
 part 'subtask_event.dart';
@@ -54,14 +55,14 @@ class SubtaskBloc extends Bloc<SubtaskEvent, SubtaskState> {
     try {
       if (event.title.isNotEmpty) {
         SubTask? subtask = await _repository.createSubtask(SubTask(
-          taskId: event.taskId,
+          task: event.task,
           title: event.title,
           isCompleted: false,
         ));
         if (subtask != null) {
           emit(SubtaskLoading());
-          event.subtaskList.add(subtask);
-          emit(SubtaskLoaded(event.subtaskList));
+          event.task.subTasks.add(subtask);
+          emit(SubtaskLoaded(event.task.subTasks));
         } else {
           emit(const SubtaskError('Ошибка создания подзадания'));
         }
@@ -76,11 +77,11 @@ class SubtaskBloc extends Bloc<SubtaskEvent, SubtaskState> {
   _deleteSubtask(DeleteSubtask event, emit) async {
     try {
       bool deleted = await _repository.deleteSubtask(event.subtaskId);
-      if (deleted) {
-        emit(SubtaskLoading());
-        event.subtaskList.removeWhere(
-          (element) => element.id == event.subtaskId,
-        );
+        if (deleted) {
+          emit(SubtaskLoading());
+          event.subtaskList.removeWhere(
+            (element) => element.id == event.subtaskId,
+          );
         emit(SubtaskLoaded(event.subtaskList));
       } else {
         emit(const SubtaskError('Ошибка удаления информации'));

@@ -1,8 +1,10 @@
 import 'dart:io';
-import 'package:task_manager/providers/constants.dart' as constant;
-import 'package:bloc/bloc.dart';
+
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:task_manager/providers/constants.dart' as constant;
 import 'package:task_manager/providers/storage_manager.dart';
+import 'package:task_manager/providers/validator.dart';
 
 import '../../models/user.dart';
 import '../../repository/user_repository.dart';
@@ -18,7 +20,7 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
     on<RegisterStarted>((event, emit) => _registerEvent(event, emit));
   }
 
-  _registerEvent(event, emit) async {
+  _registerEvent(RegisterStarted event, emit) async {
     try {
       if (event.fio.isEmpty ||
           event.password.isEmpty ||
@@ -29,7 +31,18 @@ class RegisterBloc extends Bloc<RegisterEvent, RegisterState> {
         ));
         emit(RegisterInitial());
       } else {
-        // TODO: добавить валидаторы email и телефона
+        if (!Validator.validateEmail(event.email)) {
+          emit(const RegisterError('Введите email в формате email@email.ru'));
+          return;
+        }
+        if (!Validator.validatePhone(event.phone)) {
+          emit(const RegisterError('Введите телефон в формате 78005553535'));
+          return;
+        }
+        if (!Validator.validateUsername(event.fio)) {
+          emit(const RegisterError('Введите имя и фамилию в формате Иван Иванов'));
+          return;
+        }
         emit(RegisterLoading());
         final user = await _userRepository.createUser(User(
           password: event.password,

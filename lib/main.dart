@@ -15,7 +15,7 @@ void main() {
         GlobalWidgetsLocalizations.delegate,
         GlobalCupertinoLocalizations.delegate
       ],
-      supportedLocales: const [Locale('ru', 'RU')],
+      supportedLocales: const [Locale('ru', 'RU'), Locale('en')],
       home: const AuthPage(),
     ),
   );

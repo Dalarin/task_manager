@@ -1,8 +1,7 @@
-import 'dart:io';
 
-import 'package:bloc/bloc.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
-import 'package:task_manager/models/list.dart' as model;
+import 'package:task_manager/models/list.dart';
 
 import '../../repository/list_repository.dart';
 
@@ -18,25 +17,53 @@ class ListBloc extends Bloc<ListEvent, ListState> {
     on<CreateList>((event, emit) => _createList(event, emit));
     on<UpdateList>((event, emit) => _updateList(event, emit));
     on<DeleteList>((event, emit) => _deleteList(event, emit));
+    on<AddListToTask>((event, emit) => _addListToTask(event, emit));
   }
 
   void _catchHandler(event, emit, Exception exception) {
-    if (exception is SocketException) {
-      emit(const ListError(
-        'Ошибка. Проверьте интернет соединение и попробуйте снова',
-      ));
-    } else {
-      emit(const ListError('Ошибка загрузки информации'));
+    emit(const ListError('Ошибка'));
+  }
+
+  _deleteList(DeleteList event, emit) async {
+    try {
+      emit(ListLoading());
+      bool deleted = await _repository.deleteList(event.listModel.id!);
+      if (!deleted) {
+        emit(const ListError('Ошибка удаления списка'));
+      } else {
+        event.list.remove(event.listModel);
+        emit(ListLoaded(event.list));
+      }
+    } on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
     }
   }
 
-  _deleteList(event, emit) async {}
+
+  _addListToTask(AddListToTask event, emit) async {
+    try {
+      ListModel? list = await _repository.updateList(event.listModel);
+      if (list != null) {
+
+      } else {
+        emit(const ListError('Ошибка добавления списка в задание'));
+      }
+    }on Exception catch (exception) {
+      _catchHandler(event, emit, exception);
+    }
+  }
 
   _updateList(UpdateList event, emit) async {
     try {
-      model.ListModel? list = await _repository.updateList(event.list);
+      emit(ListLoading());
+      ListModel? list = await _repository.updateList(event.list);
       if (list != null) {
-        print('update');
+        event.lists.removeWhere((element) => element.id == event.list.id!);
+        event.lists.add(list);
+        event.lists.sort((a,b) => a.id!.compareTo(b.id!));
+        emit(ListLoaded(event.lists));
+      } else {
+        emit(const ListError('Ошибка обновления списка'));
       }
     } on Exception catch (exception) {
       _catchHandler(event, emit, exception);
@@ -46,7 +73,7 @@ class ListBloc extends Bloc<ListEvent, ListState> {
   _createList(CreateList event, emit) async {
     try {
       emit(ListLoading());
-      model.ListModel? isCreated = await _repository.createList(model.ListModel(
+      ListModel? isCreated = await _repository.createList(ListModel(
         userId: event.userId,
         title: event.title,
         completeBy: event.creationDate,

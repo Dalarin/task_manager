@@ -16,10 +16,17 @@ class UpdateTag extends TagEvent {
 }
 
 class CreateTag extends TagEvent {
-  final Tag tag;
+  final String title;
+  final int color;
+  final int userId;
   final List<Tag> tags;
 
-  const CreateTag(this.tag, this.tags);
+  const CreateTag({
+    required this.title,
+    required this.userId,
+    required this.color,
+    required this.tags,
+  });
 }
 
 class DeleteTag extends TagEvent {

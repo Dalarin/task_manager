@@ -26,6 +26,11 @@ class ThemeManager {
     checkboxTheme: const CheckboxThemeData(
       fillColor: MaterialStatePropertyAll<Color>(Color(0xFF3B378E)),
     ),
+    popupMenuTheme: PopupMenuThemeData(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(20.0),
+      ),
+    ),
     inputDecorationTheme: InputDecorationTheme(
       fillColor: const Color(0xFF3B378E).withOpacity(0.1),
       filled: true,
@@ -38,6 +43,7 @@ class ThemeManager {
   );
 
   ThemeData darkTheme = ThemeData(
+    brightness: Brightness.dark,
     fontFamily: 'Gotham',
   );
 }

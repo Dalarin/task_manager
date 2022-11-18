@@ -6,9 +6,9 @@ import 'package:task_manager/repository/tag_repository.dart';
 
 import '../../models/tag.dart';
 
-part 'tag_state.dart';
-
 part 'tag_event.dart';
+
+part 'tag_state.dart';
 
 class TagBloc extends Bloc<TagEvent, TagState> {
   final TagRepository tagRepository;
@@ -31,16 +31,24 @@ class TagBloc extends Bloc<TagEvent, TagState> {
     }
   }
 
-  _createTag(event, emit) async {
+  _createTag(CreateTag event, emit) async {
     try {
-      Tag? created = await tagRepository.createTag(event.tag);
-      if (created == null) {
-        emit(const TagError(
-          'Ошибка. Проверьте интернет соединение и попробуйте снова',
-        ));
+      if (event.title.isEmpty) {
+        emit(const TagError('Заполните все поля и попробуйте снова'));
       } else {
-        event.tags.add(created);
-        emit(TagListLoaded(event.tags));
+        emit(TagLoading());
+        Tag tag = Tag(
+          userId: event.userId,
+          title: event.title,
+          color: event.color.toString(),
+        );
+        Tag? createdTag = await tagRepository.createTag(tag);
+        if (createdTag != null) {
+          event.tags.add(createdTag);
+          emit(TagListLoaded(event.tags));
+        } else {
+          emit(const TagError('Ошибка создания категории'));
+        }
       }
     } on Exception catch (exception) {
       _catchHandler(event, emit, exception);
@@ -49,6 +57,7 @@ class TagBloc extends Bloc<TagEvent, TagState> {
 
   _deleteTag(event, emit) async {
     try {
+      emit(TagLoading());
       bool deleted = await tagRepository.deleteTag(event.tagId);
       if (!deleted) {
         emit(const TagError(
@@ -65,6 +74,7 @@ class TagBloc extends Bloc<TagEvent, TagState> {
 
   _updateTag(UpdateTag event, emit) async {
     try {
+      emit(TagLoading());
       Tag? updated = await tagRepository.updateTag(event.tagId, event.tag);
       if (updated == null) {
         emit(const TagError(
@@ -73,6 +83,7 @@ class TagBloc extends Bloc<TagEvent, TagState> {
       } else {
         event.tags.removeWhere((element) => element.id == event.tagId);
         event.tags.add(updated);
+        event.tags.sort((a,b) => a.id!.compareTo(b.id!));
         emit(TagListLoaded(event.tags));
       }
     } on Exception catch (exception) {

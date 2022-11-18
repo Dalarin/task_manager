@@ -1,4 +1,3 @@
-
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:intl/intl.dart';
@@ -17,33 +16,31 @@ class CreateTaskPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocProvider<TaskBloc>(
       create: (context) => TaskBloc(TaskRepository()),
-      child: Builder(
-        builder: (context) {
-          return Scaffold(
-            backgroundColor: Theme.of(context).primaryColor,
-            appBar: _appBar(context),
-            body: SafeArea(
-              child: BlocListener<TaskBloc, TaskState>(
-                bloc: context.read<TaskBloc>(),
-                listener: (context, state) {
-                  if (state is TaskError) {
-                    ScaffoldMessenger.of(context).showSnackBar(
-                      SnackBar(
-                        duration: const Duration(seconds: 3),
-                        content: Text(
-                          state.message,
-                          textAlign: TextAlign.center,
-                        ),
+      child: Builder(builder: (context) {
+        return Scaffold(
+          backgroundColor: Theme.of(context).primaryColor,
+          appBar: _appBar(context),
+          body: SafeArea(
+            child: BlocListener<TaskBloc, TaskState>(
+              bloc: context.read<TaskBloc>(),
+              listener: (context, state) {
+                if (state is TaskError) {
+                  ScaffoldMessenger.of(context).showSnackBar(
+                    SnackBar(
+                      duration: const Duration(seconds: 3),
+                      content: Text(
+                        state.message,
+                        textAlign: TextAlign.center,
                       ),
-                    );
-                  }
-                },
-                child: CreateTaskPageContent(taskContext: context),
-              ),
+                    ),
+                  );
+                }
+              },
+              child: CreateTaskPageContent(taskContext: context),
             ),
-          );
-        }
-      ),
+          ),
+        );
+      }),
     );
   }
 
@@ -211,6 +208,7 @@ class _CreateTaskPageContentState extends State<CreateTaskPageContent> {
             _selectedDate,
             selectedTags,
             [],
+            []
           ),
         );
         Navigator.of(context).pop();
@@ -219,7 +217,7 @@ class _CreateTaskPageContentState extends State<CreateTaskPageContent> {
         height: height * 0.08,
         width: width,
         alignment: Alignment.center,
-        decoration:  BoxDecoration(
+        decoration: BoxDecoration(
           color: Theme.of(context).primaryColor,
           borderRadius: const BorderRadius.all(
             Radius.circular(20),
@@ -318,12 +316,11 @@ class TagListContent extends StatefulWidget {
 class _TagListContentState extends State<TagListContent> {
   @override
   Widget build(BuildContext context) {
-    return _tagsList(widget.tags);
+    return _tagsList(widget.tags, widget.selectedTags);
   }
 
-  Widget _tagElement(Tag tag) {
-    bool isSelected =
-        widget.selectedTags.where((element) => element.id == tag.id).isNotEmpty;
+  Widget _tagElement(Tag tag, List<Tag> tags, List<Tag> selectedTags) {
+    bool isSelected = selectedTags.contains(tag);
     return ChoiceChip(
       avatar: isSelected ? const Icon(Icons.cancel) : null,
       disabledColor: Color(int.parse(tag.color)),
@@ -341,11 +338,11 @@ class _TagListContentState extends State<TagListContent> {
     );
   }
 
-  Widget _tagsList(List<Tag> tags) {
+  Widget _tagsList(List<Tag> tags, List<Tag> selectedTags) {
     if (tags.isNotEmpty) {
       return Wrap(
         spacing: 10,
-        children: tags.map((e) => _tagElement(e)).toList(),
+        children: tags.map((e) => _tagElement(e, tags, selectedTags)).toList(),
       );
     } else {
       return Material(

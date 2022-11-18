@@ -4,7 +4,6 @@ import 'package:task_manager/bloc/auth_bloc/auth_bloc.dart';
 import 'package:task_manager/page/register_page.dart';
 import 'package:task_manager/repository/user_repository.dart';
 import '../elements/navigation_bar.dart' as element;
-import '../providers/constants.dart';
 
 class AuthPage extends StatelessWidget {
   const AuthPage({Key? key}) : super(key: key);
@@ -14,32 +13,29 @@ class AuthPage extends StatelessWidget {
     return Scaffold(
       body: SafeArea(
         child: BlocProvider<AuthBloc>(
-          create: (context) => AuthBloc(UserRepository())..add(AppStarted()),
-          child: BlocListener<AuthBloc, AuthState>(
-            child: BlocBuilder<AuthBloc, AuthState>(
-              builder: (context, state) {
-                if (state is AuthLoading) {
-                  return const Center(child: CircularProgressIndicator());
-                } else if (state is AppStarting) {
-                  return const Center(child: CircularProgressIndicator());
-                } else {
-                  return LoginInputForm(context: context);
-                }
-              },
-            ),
+          create: (_) => AuthBloc(UserRepository())..add(AppStarted()),
+          child: BlocConsumer<AuthBloc, AuthState>(
             listener: (context, state) {
               if (state is AuthError) {
                 ScaffoldMessenger.of(context).showSnackBar(
                   _buildSnackBar(state.message, context),
                 );
               } else if (state is AuthLoaded) {
-                user = state.user;
                 Navigator.pushReplacement(
                   context,
                   MaterialPageRoute(
                     builder: (context) => const element.NavigationBar(),
                   ),
                 );
+              }
+            },
+            builder: (context, state) {
+              if (state is AuthLoading) {
+                return const Center(child: CircularProgressIndicator());
+              } else if (state is AppStarting) {
+                return const Center(child: CircularProgressIndicator());
+              } else {
+                return LoginInputForm(context: context);
               }
             },
           ),
