@@ -128,7 +128,7 @@ class _LoginInputFormState extends State<LoginInputForm> {
         decoration: const BoxDecoration(
           color: Color(0xFF3B378E),
           borderRadius: BorderRadius.all(
-            Radius.circular(20),
+            Radius.circular(10),
           ),
         ),
         child: const Text(

@@ -1,7 +1,8 @@
-import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:equatable/equatable.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:task_manager/models/list.dart';
 import 'package:task_manager/models/listInvite.dart';
+import 'package:task_manager/providers/constants.dart';
 import 'package:task_manager/providers/validator.dart';
 
 import '../../models/task.dart';
@@ -20,16 +21,48 @@ class InviteBloc extends Bloc<InviteEvent, InviteState> {
     on<CreateTaskInvite>((event, emit) => _createTaskInvite(event, emit));
     on<DeleteTaskInvite>((event, emit) => _deleteTaskInvite(event, emit));
     on<GetInvitesByTask>((event, emit) => _getInvitesByTaskId(event, emit));
+    on<AcceptTaskInvite>((event, emit) => _acceptTaskInvite(event, emit));
     on<GetTaskInvitesByUser>(
         (event, emit) => _getTaskInvitesByUserId(event, emit));
     on<CreateListInvite>((event, emit) => _createListInvite(event, emit));
     on<DeleteListInvite>((event, emit) => _deleteListInvite(event, emit));
     on<GetInvitesByList>((event, emit) => _getInvitesByListId(event, emit));
+    on<AcceptListInvite>((event, emit) => _acceptListInvite(event, emit));
     on<GetListInvitesByUser>(
         (event, emit) => _getListInvitesByUserId(event, emit));
   }
 
   _exceptionHandler(exception, emit) {}
+
+  _acceptTaskInvite(AcceptTaskInvite event, emit) async {
+    try {
+      emit(InviteLoading());
+      bool isAccepted = await _repository.acceptTaskInvite(event.taskInvite);
+      if (isAccepted == true) {
+        event.taskInviteList.remove(event.taskInvite);
+        emit(InviteTaskLoaded(event.taskInviteList));
+      } else {
+        emit(const InviteError('Ошибка при обработке'));
+      }
+    } on Exception catch (exception) {
+      _exceptionHandler(exception, emit);
+    }
+  }
+
+  _acceptListInvite(AcceptListInvite event, emit) async {
+    try {
+      emit(InviteLoading());
+      bool isAccepted = await _repository.acceptListInvite(event.listInvite);
+      if (isAccepted == true) {
+        event.listInviteList.remove(event.listInvite);
+        emit(InviteListLoaded(invites: event.listInviteList));
+      } else {
+        emit(const InviteError('Ошибка при обработке'));
+      }
+    } on Exception catch (exception) {
+      _exceptionHandler(exception, emit);
+    }
+  }
 
   _createTaskInvite(CreateTaskInvite event, emit) async {
     try {
@@ -41,6 +74,7 @@ class InviteBloc extends Bloc<InviteEvent, InviteState> {
               'Введите email в формате email@email.ru и попробуйте снова'));
         } else {
           TaskInvite? creation = TaskInvite(
+            invitedBy: event.invitedBy,
             task: event.task,
             user: event.invitedBy,
             inviteDate: DateTime.now(),
@@ -70,6 +104,7 @@ class InviteBloc extends Bloc<InviteEvent, InviteState> {
               'Введите email в формате email@email.ru и попробуйте снова'));
         } else {
           ListInvite? creation = ListInvite(
+            invitedBy: user!,
             listModel: event.listModel,
             user: event.invitedBy,
             inviteDate: DateTime.now(),

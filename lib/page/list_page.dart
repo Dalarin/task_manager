@@ -221,6 +221,31 @@ class ListPage extends StatelessWidget {
     }
   }
 
+  Widget _appBarActions(BuildContext context, ListModel listModel, double height, double width) {
+    if (listModel.userId == user!.id!) {
+      return   PopupMenuButton(
+        itemBuilder: (_) {
+          return {'Удалить', 'Приглашения', 'Прикрепленные пользователи'}
+              .map((choice) {
+            return PopupMenuItem<String>(
+              value: choice,
+              child: Text(choice),
+            );
+          }).toList();
+        },
+        onSelected: (value) => _handleClick(
+          context,
+          listModel,
+          height,
+          width,
+          value,
+        ),
+      );
+
+    }
+    return Container();
+  }
+
   AppBar _appBar(
     BuildContext context,
     ListModel listModel,
@@ -234,26 +259,7 @@ class ListPage extends StatelessWidget {
       elevation: 0.0,
       backgroundColor: Colors.transparent,
       centerTitle: true,
-      actions: [
-        PopupMenuButton(
-          itemBuilder: (_) {
-            return {'Удалить', 'Приглашения', 'Прикрепленные пользователи'}
-                .map((choice) {
-              return PopupMenuItem<String>(
-                value: choice,
-                child: Text(choice),
-              );
-            }).toList();
-          },
-          onSelected: (value) => _handleClick(
-            context,
-            listModel,
-            height,
-            width,
-            value,
-          ),
-        )
-      ],
+      actions: [_appBarActions(context, listModel, height, width)],
       iconTheme: const IconThemeData(color: Colors.black),
       title: FocusScope(
         child: Focus(

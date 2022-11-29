@@ -86,3 +86,17 @@ class GetListInvitesByUser extends InviteEvent {
 
   const GetListInvitesByUser({required this.userId});
 }
+
+class AcceptTaskInvite extends InviteEvent {
+  final TaskInvite taskInvite;
+  final List<TaskInvite> taskInviteList;
+
+  const AcceptTaskInvite({required this.taskInvite, required this.taskInviteList});
+}
+
+class AcceptListInvite extends InviteEvent {
+  final ListInvite listInvite;
+  final List<ListInvite> listInviteList;
+
+  const AcceptListInvite({required this.listInvite, required this.listInviteList});
+}

@@ -35,4 +35,10 @@ class InviteRepository {
 
   Future<bool> deleteListInvite(int inviteId) =>
       _repository.deleteListInvite(inviteId);
+
+  Future<bool> acceptTaskInvite(TaskInvite taskInvite) =>
+      _repository.acceptTaskInvite(taskInvite);
+
+  Future<bool> acceptListInvite(ListInvite listInvite) =>
+      _repository.acceptListInvite(listInvite);
 }

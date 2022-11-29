@@ -172,7 +172,33 @@ class TaskPage extends StatelessWidget {
         ),
       );
     }
-    return null;
+    return Container(
+      padding: const EdgeInsets.symmetric(
+        horizontal: 15,
+        vertical: 15,
+      ),
+      child: Row(
+        children: [
+          InkWell(
+            onTap: () {
+              final bloc = context.read<UserBloc>();
+              bloc.add(DeleteUserFromTask(taskId: task.id!, userId: user!.id!));
+              Future.delayed(
+                const Duration(milliseconds: 500),
+                () => Navigator.pop(context),
+              );
+            },
+            child: Row(
+              children: const [
+                Icon(Icons.exit_to_app),
+                SizedBox(width: 5),
+                Text('Выйти из задачи'),
+              ],
+            ),
+          )
+        ],
+      ),
+    );
   }
 }
 
@@ -357,7 +383,7 @@ class TaskPageContent extends StatelessWidget {
     BuildContext context,
     Task task,
     List<Task> tasks,
-    Function(BuildContext, Task, List<Task> tasks,  double, double) onTap,
+    Function(BuildContext, Task, List<Task> tasks, double, double) onTap,
     String text,
     double width,
     double height,
@@ -570,8 +596,8 @@ class TaskPageContent extends StatelessWidget {
     );
   }
 
-  _shareTask(BuildContext context, Task task, List<Task> tasks,
-      double height, double width) {
+  _shareTask(BuildContext context, Task task, List<Task> tasks, double height,
+      double width) {
     showDialog<void>(
       context: context,
       builder: (BuildContext _) => ShareTaskDialog(

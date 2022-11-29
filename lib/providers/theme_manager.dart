@@ -4,39 +4,42 @@ class ThemeManager {
   ThemeData lightTheme = ThemeData(
     fontFamily: 'Gotham',
     primaryColor: const Color(0xFF3B378E),
+    primaryColorLight: const Color(0xFF6D61BF),
+    primaryColorDark: const Color(0xFF001160),
     snackBarTheme: const SnackBarThemeData(
+      backgroundColor: Color(0xFF3B378E),
       behavior: SnackBarBehavior.floating,
       elevation: 5.0,
-      backgroundColor: Color(0xFF3B378E),
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.all(
-          Radius.circular(20),
+          Radius.circular(10),
         ),
+      ),
+    ),
+    checkboxTheme: CheckboxThemeData(
+      fillColor: MaterialStateProperty.all(
+        const Color(0xFF3B378E),
       ),
     ),
     colorScheme: ThemeData().colorScheme.copyWith(
-          secondary: const Color(0xFF3B378E),
           primary: const Color(0xFF3B378E),
+          secondary: const Color(0xFF3B378E),
         ),
     dialogTheme: DialogTheme(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(10.0),
       ),
-    ),
-    checkboxTheme: const CheckboxThemeData(
-      fillColor: MaterialStatePropertyAll<Color>(Color(0xFF3B378E)),
     ),
     popupMenuTheme: PopupMenuThemeData(
       shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(20.0),
+        borderRadius: BorderRadius.circular(10.0),
       ),
     ),
-    inputDecorationTheme: InputDecorationTheme(
-      fillColor: const Color(0xFF3B378E).withOpacity(0.1),
+    inputDecorationTheme: const InputDecorationTheme(
       filled: true,
-      border: const OutlineInputBorder(
+      border: OutlineInputBorder(
         borderRadius: BorderRadius.all(
-          Radius.circular(20),
+          Radius.circular(10),
         ),
       ),
     ),

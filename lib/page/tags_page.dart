@@ -59,7 +59,6 @@ class TagsPage extends StatelessWidget {
   ) {
     showDialog<void>(
       context: context,
-      // false = user must tap button, true = tap outside dialog
       builder: (BuildContext _) {
         return BlocProvider.value(
           value: context.read<TagBloc>(),
@@ -140,7 +139,6 @@ class TagsPage extends StatelessWidget {
     return BlocBuilder<TagBloc, TagState>(
       bloc: context.read<TagBloc>()..add(GetTagsListOfUser(user!.id!)),
       builder: (context, state) {
-        print('НОВОЕ СОСТОЯНИЕ ВИДЖЕТА: $state');
         if (state is TagListLoaded) {
           return _tagsList(context, state.tagModel);
         } else if (state is TagLoading) {
@@ -267,8 +265,8 @@ class _CreateTagDialogState extends State<CreateTagDialog> {
       onTap: () {
         final bloc = context.read<TagBloc>();
         if (tag != null) {
-          widget.tag!.title = titleController.text;
-          widget.tag!.color = pickedColor.value.toString();
+          tag.title = titleController.text;
+          tag.color = pickedColor.value.toString();
           bloc.add(UpdateTag(tag.id!, tag, widget.tags));
         } else {
           bloc.add(CreateTag(
@@ -285,11 +283,10 @@ class _CreateTagDialogState extends State<CreateTagDialog> {
   }
 
   Widget _alertDialogTitle(BuildContext context) {
-    String text = widget.tag != null ? 'Редактирование' : 'Создание категории';
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Text(text),
+        Text(widget.tag != null ? 'Редактирование' : 'Создание категории'),
         _deleteIcon(context, widget.tag, widget.tags),
         _confirmIcon(context, widget.tag, widget.tags)
       ],
